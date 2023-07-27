@@ -3,6 +3,7 @@ from db import items
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from schemas import ItemSchema, ItemUpdateSchema
 
 blp = Blueprint(
     "Item",
@@ -21,8 +22,8 @@ class ItemList(MethodView):
         except:
             abort(404, message="Store not found")
 
-    def post(self, store_id):
-        item_data = request.get_json()
+    @blp.arguments(ItemSchema)
+    def post(self, item_data, store_id):
         try:
             store_items = items[store_id]
             new_item_id = uuid.uuid4().hex
@@ -46,8 +47,8 @@ class Item(MethodView):
         except KeyError:
             abort(404, message="Store or Item not found")
 
-    def put(self, store_id, item_id):
-        item_data = request.get_json()
+    @blp.arguments(ItemUpdateSchema)
+    def put(self, item_data, store_id, item_id):
         try:
             item = items[store_id][item_id]
             item |= item_data

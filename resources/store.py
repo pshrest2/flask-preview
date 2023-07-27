@@ -3,6 +3,7 @@ from db import stores
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from schemas import StoreSchema
 
 blp = Blueprint(
     "Store", __name__, description="Operations on stores", url_prefix="/stores"
@@ -14,8 +15,8 @@ class StoreList(MethodView):
     def get(self):
         return list(stores.values())
 
-    def post(self):
-        store_data = request.get_json()
+    @blp.arguments(StoreSchema)
+    def post(self, store_data):
         store_id = uuid.uuid4().hex
         new_store = {**store_data, "id": store_id}
         stores[store_id] = new_store
@@ -31,8 +32,8 @@ class Store(MethodView):
         except KeyError:
             abort(404, message="Store not found")
 
-    def put(self, store_id):
-        store_data = request.get_json()
+    @blp.arguments(StoreSchema)
+    def put(self, store_data, store_id):
         try:
             store = stores[store_id]
             store |= store_data
