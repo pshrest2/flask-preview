@@ -12,20 +12,23 @@ blp = Blueprint(
 
 @blp.route("")
 class StoreList(MethodView):
+    @blp.response(200, StoreSchema(many=True))
     def get(self):
-        return list(stores.values())
+        return stores.values()
 
     @blp.arguments(StoreSchema)
+    @blp.response(201, StoreSchema)
     def post(self, store_data):
         store_id = uuid.uuid4().hex
         new_store = {**store_data, "id": store_id}
         stores[store_id] = new_store
 
-        return new_store, 201
+        return new_store
 
 
 @blp.route("/<string:store_id>")
 class Store(MethodView):
+    @blp.response(200, StoreSchema)
     def get(self, store_id):
         try:
             return stores[store_id]
@@ -33,6 +36,7 @@ class Store(MethodView):
             abort(404, message="Store not found")
 
     @blp.arguments(StoreSchema)
+    @blp.response(200, StoreSchema)
     def put(self, store_data, store_id):
         try:
             store = stores[store_id]
