@@ -16,33 +16,33 @@ class StoreList(MethodView):
 
     def post(self):
         store_data = request.get_json()
-        id = uuid.uuid4().hex
-        new_store = {**store_data, "id": id}
-        stores[id] = new_store
+        store_id = uuid.uuid4().hex
+        new_store = {**store_data, "id": store_id}
+        stores[store_id] = new_store
 
         return new_store, 201
 
 
-@blp.route("/<string:id>")
+@blp.route("/<string:store_id>")
 class Store(MethodView):
-    def get(self, id):
+    def get(self, store_id):
         try:
-            return stores[id]
+            return stores[store_id]
         except KeyError:
             abort(404, message="Store not found")
 
-    def put(self, id):
+    def put(self, store_id):
         store_data = request.get_json()
         try:
-            store = stores[id]
+            store = stores[store_id]
             store |= store_data
             return store
         except KeyError:
             abort(404, message="Store not found")
 
-    def delete(self, id):
+    def delete(self, store_id):
         try:
-            del stores[id]
+            del stores[store_id]
             return {"message": "Store delete successfully"}
         except KeyError:
             abort(404, message="Store not found")
