@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_smorest import Api
+from flask_migrate import Migrate
 
 from db import db
 
@@ -25,10 +26,8 @@ def create_app(db_url=None):
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
+    migrate = Migrate(app, db)
     api = Api(app)
-
-    with app.app_context():
-        db.create_all()
 
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint(StoreBlueprint)
