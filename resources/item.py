@@ -38,13 +38,23 @@ class ItemList(MethodView):
 @blp.route("/<string:item_id>")
 class Item(MethodView):
     @blp.response(200, ItemSchema)
-    def get(self, store_id, item_id):
-        pass
+    def get(self, item_id):
+        return ItemModel.query.get_or_404(item_id)
 
     @blp.arguments(ItemUpdateSchema)
     @blp.response(200, ItemSchema)
-    def put(self, item_data, store_id, item_id):
-        pass
+    def put(self, item_data, item_id):
+        item = ItemModel.query.get_or_404(item_id)
+        item.price = item_data["price"]
+        item.name = item_data["name"]
 
-    def delete(self, store_id, item_id):
-        pass
+        db.session.add(item)
+        db.session.commit()
+
+        return item
+
+    def delete(self, item_id):
+        item = ItemModel.query.get_or_404(item_id)
+        db.session.delete(item)
+        db.session.commit()
+        return {"message": "Item deleted."}

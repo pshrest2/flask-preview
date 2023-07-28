@@ -34,12 +34,20 @@ class StoreList(MethodView):
 class Store(MethodView):
     @blp.response(200, StoreSchema)
     def get(self, store_id):
-        pass
+        return StoreModel.query.get_or_404(store_id)
 
     @blp.arguments(StoreSchema)
     @blp.response(200, StoreSchema)
     def put(self, store_data, store_id):
-        pass
+        store = StoreModel.query.get_or_404(store_id)
+        store.name = store_data["name"]
+        db.session.add(store)
+        db.session.commit()
+
+        return store
 
     def delete(self, store_id):
-        pass
+        store = StoreModel.query.get_or_404(store_id)
+        db.session.delete(store)
+        db.session.commit()
+        return {"message": "Store deleted"}
