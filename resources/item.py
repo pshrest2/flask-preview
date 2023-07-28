@@ -1,68 +1,50 @@
-import uuid
-from db import items
-from flask import request
+from sqlalchemy.exc import SQLAlchemyError
+
+from db import db
+from models import ItemModel
+
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from schemas import ItemSchema, ItemUpdateSchema
+
 
 blp = Blueprint(
     "Item",
     __name__,
     description="Operations on items",
-    url_prefix="/<string:store_id>/items",
+    url_prefix="/items",
 )
 
 
 @blp.route("")
 class ItemList(MethodView):
     @blp.response(200, ItemSchema(many=True))
-    def get(self, store_id):
-        try:
-            store_items = items[store_id]
-            return store_items.values()
-        except:
-            abort(404, message="Store not found")
+    def get(self):
+        return ItemModel.query.all()
 
     @blp.arguments(ItemSchema)
     @blp.response(201, ItemSchema)
-    def post(self, item_data, store_id):
+    def post(self, item_data):
         try:
-            store_items = items[store_id]
-            new_item_id = uuid.uuid4().hex
-            new_item = {
-                **item_data,
-                "id": new_item_id,
-            }
-            store_items[new_item_id] = new_item
+            item = ItemModel(**item_data)
 
-            return new_item
-        except KeyError:
-            abort(404, message="Store not found")
+            db.session.add(item)
+            db.session.commit()
+            return item
+        except SQLAlchemyError:
+            abort(500, message="An error occurred while inserting the item.")
 
 
 @blp.route("/<string:item_id>")
 class Item(MethodView):
     @blp.response(200, ItemSchema)
     def get(self, store_id, item_id):
-        try:
-            item = items[store_id][item_id]
-            return item
-        except KeyError:
-            abort(404, message="Store or Item not found")
+        pass
 
     @blp.arguments(ItemUpdateSchema)
     @blp.response(200, ItemSchema)
     def put(self, item_data, store_id, item_id):
-        try:
-            item = items[store_id][item_id]
-            item |= item_data
-            return item
-        except KeyError:
-            abort(404, message="Store or Item not found")
+        pass
 
     def delete(self, store_id, item_id):
-        try:
-            del items[store_id][item_id]
-            return {"message": "Item delete successfully"}
-        except KeyError:
-            abort(404, message="Store or Item not found")
+        pass

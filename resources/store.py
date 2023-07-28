@@ -1,9 +1,10 @@
-import uuid
-from db import stores
-from flask import request
+from sqlalchemy.exc import SQLAlchemyError
+
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from schemas import StoreSchema
+from db import db
+from models import StoreModel
 
 blp = Blueprint(
     "Store", __name__, description="Operations on stores", url_prefix="/stores"
@@ -14,40 +15,31 @@ blp = Blueprint(
 class StoreList(MethodView):
     @blp.response(200, StoreSchema(many=True))
     def get(self):
-        return stores.values()
+        return StoreModel.query.all()
 
     @blp.arguments(StoreSchema)
     @blp.response(201, StoreSchema)
     def post(self, store_data):
-        store_id = uuid.uuid4().hex
-        new_store = {**store_data, "id": store_id}
-        stores[store_id] = new_store
+        try:
+            store = StoreModel(**store_data)
 
-        return new_store
+            db.session.add(store)
+            db.session.commit()
+            return store
+        except SQLAlchemyError:
+            abort(500, message="An error occurred while inserting the store.")
 
 
 @blp.route("/<string:store_id>")
 class Store(MethodView):
     @blp.response(200, StoreSchema)
     def get(self, store_id):
-        try:
-            return stores[store_id]
-        except KeyError:
-            abort(404, message="Store not found")
+        pass
 
     @blp.arguments(StoreSchema)
     @blp.response(200, StoreSchema)
     def put(self, store_data, store_id):
-        try:
-            store = stores[store_id]
-            store |= store_data
-            return store
-        except KeyError:
-            abort(404, message="Store not found")
+        pass
 
     def delete(self, store_id):
-        try:
-            del stores[store_id]
-            return {"message": "Store delete successfully"}
-        except KeyError:
-            abort(404, message="Store not found")
+        pass
